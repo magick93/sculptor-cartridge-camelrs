@@ -1,0 +1,8 @@
+.DS_Store
+target/
+xtend-gen/
+.classpath
+.project
+.settings/
+/target/
+/target/
