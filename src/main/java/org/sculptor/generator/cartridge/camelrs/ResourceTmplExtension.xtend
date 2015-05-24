@@ -14,7 +14,6 @@ import sculptormetamodel.HttpMethod
 import org.sculptor.generator.template.common.ExceptionTmpl
 import sculptormetamodel.NamedElement
 import com.google.common.collect.Iterables
-import sculptormetamodel.DomainObjectTypedElement
 
 @ChainOverride
 class ResourceTmplExtension extends ResourceTmpl {
@@ -26,13 +25,20 @@ class ResourceTmplExtension extends ResourceTmpl {
 	@Inject extension Properties properties
 
 	@Inject extension JAXRSHelper jaxrsHelper
+	
+	
 
 	override String resourceBase(Resource it) {
+		
+		
+		writeImplFile
+		
+		
 		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "")), OutputSlot::TO_GEN_SRC,
 		'''
 		«javaHeader»
 		package «restPackage»;
-
+		
 		/// Sculptor code formatter imports ///
 
 		«IF gapClass»
@@ -49,16 +55,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 			 */
 			«jaxrsClassAnnotation»
 		«ENDIF»
-		public «IF gapClass»abstract «ENDIF»class «name»«IF gapClass»Base«ENDIF» «it.extendsLitteral» {
-
-			public «name»«IF gapClass»Base«ENDIF»() {
-			}
-
-			«IF serviceContextToBeGenerated»
-				«serviceContext»
-			«ENDIF»
-
-			«injectDelegateServices»
+		public interface «IF gapClass»abstract «ENDIF» «name»«IF gapClass»Base«ENDIF» «it.extendsLitteral» {
 
 			«operations.filter(op | !op.implementedInGapClass).map[jaxrsMethod].join»
 
@@ -67,19 +64,60 @@ class ResourceTmplExtension extends ResourceTmpl {
 		'''
 		)
 	}
+	
+
+	
+	def String writeImplFile(Resource it) {
+		
+		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "Impl")), OutputSlot::TO_GEN_SRC,
+			'''
+		«javaHeader»
+		package «restPackage»;
+		import javax.inject.Inject;
+		import org.apache.camel.CamelContext;
+		import org.apache.camel.Produce;
+		import org.apache.camel.cdi.ContextName;
+		
+		/// Sculptor code formatter imports ///
+
+		
+		public class «IF gapClass»abstract «ENDIF» «name»Impl«IF gapClass»Base«ENDIF» «it.extendsLitteral» implements «name»{
+			
+			@Inject
+		    @ContextName("rest-camel-context")
+		    private CamelContext context;
+		    
+			«injectDelegateServices»
+			
+			
+
+			«operations.filter(op |  !op.implementedInGapClass).map[testLearn].join»
+
+			
+		}
+		'''
+		
+		)
+		
+	}
+	
+	def String testLearn(ResourceOperation it){
+		'''
+		hello world
+		«helper.getAccessNormalizedName(it.delegate.delegate)»
+		'''
+		
+	}
 
 	def String injectDelegateServices(Resource it) {
 		'''
 		«FOR delegateService : it.getDelegateServices()»
-			@javax.ejb.EJB
-			private «getServiceapiPackage(delegateService)».«delegateService.name
-				»«IF delegateService.localInterface»Local«ENDIF
-					» «delegateService.name.toFirstLower()»;
+			@Inject «getServiceapiPackage(delegateService)».«delegateService.name.toFirstUpper» «delegateService.name.toFirstLower()»;
 
-			protected «getServiceapiPackage(delegateService)».«delegateService.name
-				» get«delegateService.name»() {
-				return «delegateService.name.toFirstLower()»;
-			}
+«««			protected «getServiceapiPackage(delegateService)».«delegateService.name
+«««				» get«delegateService.name»() {
+«««				return «delegateService.name.toFirstLower()»;
+«««			}
 		«ENDFOR»
 		'''
 	}
@@ -111,7 +149,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 
 	def String jaxrsClassAnnotation(Resource it) {
 		'''
-		@javax.ejb.Stateless
+	
 		@javax.ws.rs.Path("/«domainResourceName.toFirstLower»")
 		«IF swaggerIntegrationEnabled»
 			«swaggerApiAnnotation»
@@ -141,16 +179,18 @@ class ResourceTmplExtension extends ResourceTmpl {
 				 */
 			«ENDIF»
 			«jaxrsMethodAnnotation»
-			«jaxrsMethodSignature» {
-				«IF implementedInGapClass»
-					«jaxrsMethodHandWritten»
-				«ELSE»
-					«IF delegate != null»
-						«jaxrsMethodDelegation»
-					«ENDIF»
-					«jaxrsMethodReturn»
-				«ENDIF»
-			}
+			«jaxrsMethodSignature» 
+			
+«««			{
+«««				«IF implementedInGapClass»
+«««					«jaxrsMethodHandWritten»
+«««				«ELSE»
+«««					«IF delegate != null»
+«««						«jaxrsMethodDelegation»
+«««					«ENDIF»
+«««					«jaxrsMethodReturn»
+«««				«ENDIF»
+«««			}
 		'''
 	}
 
@@ -197,13 +237,13 @@ class ResourceTmplExtension extends ResourceTmpl {
 				«delegate.typeName» newEntity = entity;
 				entity = «idOperation.service.name.toFirstLower».«
 					idOperation.name»(serviceContext(), id);
-				«FOR a : Iterables.<DomainObjectTypedElement>concat(
+				«FOR a : Iterables.<NamedElement>concat(
 					domainObject.attributes.filter[a |
 						a.visibilityLitteralSetter.startsWith("public") && !a.uuid
-							&& !a.auditableAttribute].map[a | a as DomainObjectTypedElement],
+							&& !a.auditableAttribute].map[a | a as NamedElement],
 					domainObject.references.filter[a |
 						a.visibilityLitteralSetter.startsWith("public")
-							&& !a.collection].map[a | a as DomainObjectTypedElement])»
+							&& !a.collection].map[a | a as NamedElement])»
 
 					if(newEntity.get«a.name.toFirstUpper»() != null)
 						entity.set«a.name.toFirstUpper
@@ -231,7 +271,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 			«ELSEIF delegate != null && delegate.typeName == "void"»
 				return Response.ok().build();
 			«ELSEIF delegate != null»
-				return Response.ok(«delegate.tryWrapGenericEntity»).build();
+				return Response.ok(«delegate.domainObjectType»).build();
 			«ELSEIF returnString != null»
 				return Response.ok("«returnString»").build();
 			«ELSE»
@@ -243,9 +283,8 @@ class ResourceTmplExtension extends ResourceTmpl {
 
 	def String jaxrsMethodSignature(ResourceOperation it) {
 		'''
-		«it.visibilityLitteral» javax.ws.rs.core.Response «name»(«it.parameters
-			.map[p | p.jaxrsAnnotatedParam(it)].join(", ")») «
-				exceptionTmpl.throwsDecl(it)»
+		«it.visibilityLitteral» javax.ws.rs.core.Response «name.toFirstUpper»(«it.parameters.map[p | p.jaxrsAnnotatedParam(it)].join(", ")») «
+				exceptionTmpl.throwsDecl(it)»;
 		'''
 	}
 	
@@ -265,8 +304,9 @@ class ResourceTmplExtension extends ResourceTmpl {
 
 	def String jaxrsAbstractMethod(ResourceOperation it) {
 		'''
-			«it.getVisibilityLitteral()» abstract javax.ws.rs.core.Response 
-				«name»(«it.parameters.map[paramTypeAndName(it)].join(",")»)		«exceptionTmpl.throwsDecl(it)»;
+			«it.getVisibilityLitteral()» abstract javax.ws.rs.core.Response «
+				name»(«it.parameters.map[paramTypeAndName(it)].join(",")») «
+						exceptionTmpl.throwsDecl(it)»;
 		'''
 	}
 
