@@ -62,8 +62,10 @@ class ResourceTmplExtension extends ResourceTmpl {
 			
 			@Override
 			public void configure() throws Exception {
-			rest("/customer")
-				«operations.filter(op |  !op.implementedInGapClass).map[rsMethodType].join»
+				rest("/customer")
+				 «operations.filter(op |  !op.implementedInGapClass).map[rsMethodType(it)].join»«operations.filter(op |  !op.implementedInGapClass).map[rsMethodTypeLast].last»
+				
+			}
 
 			
 		}
@@ -73,6 +75,20 @@ class ResourceTmplExtension extends ResourceTmpl {
 		
 	}
 	
+	def String rsMethodType(ResourceOperation it) {
+		'''
+		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
+		  .produces(«jaxrsMediaTypes»)
+		  .to("direct:«it.delegate.delegate.name»")
+		
+		'''
+	}
+	def String rsMethodTypeLast(ResourceOperation it) {
+		'''
+		;
+		
+		'''
+	}
 
 
 	def String injectDelegateServices(Resource it) {
@@ -88,40 +104,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		'''
 	}
 
-	override String resourceSubclass(Resource it) {
-		fileOutput(javaFileName(restPackage + "." + name), OutputSlot::TO_SRC,
-		'''
-		«javaHeader»
-		package «restPackage»;
 
-		/// Sculptor code formatter imports ///
-
-		/**
-		 * Implementation of «name».
-		 */
-		«jaxrsClassAnnotation»
-		public class «name» extends «name»Base {
-
-			public «name»() {
-			}
-
-			«operations.filter(op | op.implementedInGapClass).map[jaxrsMethod].join»
-
-			}
-		}
-		'''
-		)
-
-	}
-	
-	def String rsMethodType(ResourceOperation it) {
-		'''
-		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
-		  .produces(«jaxrsMediaTypes»)
-		  .to("direct:getCustomers")
-		// GET /rest/customer/1 
-		'''
-	}
 
 	def String jaxrsClassAnnotation(Resource it) {
 		'''
