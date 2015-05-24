@@ -48,6 +48,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		import org.apache.camel.Produce;
 		import org.apache.camel.builder.RouteBuilder;
 		import org.apache.camel.cdi.ContextName;
+		«imports(it)»
 		
 		/// Sculptor code formatter imports ///
 
@@ -77,16 +78,13 @@ class ResourceTmplExtension extends ResourceTmpl {
 	
 	def String rsMethodType(ResourceOperation it) {
 		'''
+		
 		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
 		  .produces(«jaxrsMediaTypes»)
-		  .to("direct:«it.delegate.delegate.name»")
-		
-		'''
+		  .to("direct:«it.delegate.delegate.name»")'''
 	}
 	def String rsMethodTypeLast(ResourceOperation it) {
-		'''
-		;
-		
+		''';
 		'''
 	}
 
@@ -102,6 +100,15 @@ class ResourceTmplExtension extends ResourceTmpl {
 «««			}
 		«ENDFOR»
 		'''
+	}
+	
+	def String imports(Resource it){
+		'''
+		«FOR delegateService : it.getDelegateServices()»
+			import «getServiceapiPackage(delegateService)».«delegateService.name.toFirstUpper»;
+		«ENDFOR»
+		'''
+		
 	}
 
 
