@@ -1,2 +1,2 @@
-# sculptor-cartridge-springdatajpa
-Sculptor Cartridge for Spring Data JPA
+# sculptor-cartridge-camels
+Sculptor Cartridge for rest services using Apache Camel
