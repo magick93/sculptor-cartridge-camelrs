@@ -31,57 +31,28 @@ class ResourceTmplExtension extends ResourceTmpl {
 	override String resourceBase(Resource it) {
 		
 		
-		writeImplFile
+		writeCamelRestDsl
 		
-		
-		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "")), OutputSlot::TO_GEN_SRC,
-		'''
-		«javaHeader»
-		package «restPackage»;
-		
-		/// Sculptor code formatter imports ///
-
-		«IF gapClass»
-			/**
-			 * Generated base class for implementation of «name».
-			 * <p>Make sure that subclass defines the following annotations:
-			 * <pre>
-			«jaxrsClassAnnotation»
-			 * </pre>
-			 */
-		«ELSE»
-			/**
-			 * Resource Implementation of «name».
-			 */
-			«jaxrsClassAnnotation»
-		«ENDIF»
-		public interface «IF gapClass»abstract «ENDIF» «name»«IF gapClass»Base«ENDIF» «it.extendsLitteral» {
-
-			«operations.filter(op | !op.implementedInGapClass).map[jaxrsMethod].join»
-
-			«operations.filter(op |  op.implementedInGapClass).map[jaxrsAbstractMethod].join»
-		}
-		'''
-		)
 	}
 	
 
 	
-	def String writeImplFile(Resource it) {
+	def String writeCamelRestDsl(Resource it) {
 		
-		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "Impl")), OutputSlot::TO_GEN_SRC,
+		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "RouteBuilder")), OutputSlot::TO_GEN_SRC,
 			'''
 		«javaHeader»
 		package «restPackage»;
 		import javax.inject.Inject;
 		import org.apache.camel.CamelContext;
 		import org.apache.camel.Produce;
+		import org.apache.camel.builder.RouteBuilder;
 		import org.apache.camel.cdi.ContextName;
 		
 		/// Sculptor code formatter imports ///
 
 		
-		public class «IF gapClass»abstract «ENDIF» «name»Impl«IF gapClass»Base«ENDIF» «it.extendsLitteral» implements «name»{
+		public class «IF gapClass»abstract «ENDIF» «name»RouteBuilder«IF gapClass»Base«ENDIF» «it.extendsLitteral» extends RouteBuilder{
 			
 			@Inject
 		    @ContextName("rest-camel-context")
@@ -89,9 +60,10 @@ class ResourceTmplExtension extends ResourceTmpl {
 		    
 			«injectDelegateServices»
 			
-			
-
-			«operations.filter(op |  !op.implementedInGapClass).map[testLearn].join»
+			@Override
+			public void configure() throws Exception {
+			rest("/customer")
+				«operations.filter(op |  !op.implementedInGapClass).map[rsMethodType].join»
 
 			
 		}
@@ -101,13 +73,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		
 	}
 	
-	def String testLearn(ResourceOperation it){
-		'''
-		hello world
-		«helper.getAccessNormalizedName(it.delegate.delegate)»
-		'''
-		
-	}
+
 
 	def String injectDelegateServices(Resource it) {
 		'''
@@ -141,10 +107,20 @@ class ResourceTmplExtension extends ResourceTmpl {
 
 			«operations.filter(op | op.implementedInGapClass).map[jaxrsMethod].join»
 
+			}
 		}
 		'''
 		)
 
+	}
+	
+	def String rsMethodType(ResourceOperation it) {
+		'''
+		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
+		  .produces(«jaxrsMediaTypes»)
+		  .to("direct:getCustomers")
+		// GET /rest/customer/1 
+		'''
 	}
 
 	def String jaxrsClassAnnotation(Resource it) {
@@ -181,16 +157,16 @@ class ResourceTmplExtension extends ResourceTmpl {
 			«jaxrsMethodAnnotation»
 			«jaxrsMethodSignature» 
 			
-«««			{
-«««				«IF implementedInGapClass»
-«««					«jaxrsMethodHandWritten»
-«««				«ELSE»
-«««					«IF delegate != null»
-«««						«jaxrsMethodDelegation»
-«««					«ENDIF»
-«««					«jaxrsMethodReturn»
-«««				«ENDIF»
-«««			}
+			{
+				«IF implementedInGapClass»
+					«jaxrsMethodHandWritten»
+				«ELSE»
+					«IF delegate != null»
+						«jaxrsMethodDelegation»
+					«ENDIF»
+					«jaxrsMethodReturn»
+				«ENDIF»
+			}
 		'''
 	}
 
@@ -203,6 +179,8 @@ class ResourceTmplExtension extends ResourceTmpl {
 		«ENDIF»
 		'''
 	}
+	
+
 
 	def String jaxrsMethodHandWritten(ResourceOperation it) {
 		'''
