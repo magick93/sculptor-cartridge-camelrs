@@ -7,18 +7,18 @@
 		<version>3.1.0</version>
 	</parent>
 	<artifactId>sculptor-cartridge-camelrs</artifactId>
-	<version>3.1.1-SNAPSHOT</version>
+	<version>3.1.0</version>
 	<name>Sculptor :: Cartridges :: Apache Camel Rest</name>
 
 	<scm>
-		<url>https://github.com/magick93/sculptor-cartridge-apachedeltaspike.git</url>
-		<connection>https://github.com/magick93/sculptor-cartridge-apachedeltaspike.git</connection>
-		<developerConnection>https://github.com/magick93/sculptor-cartridge-apachedeltaspike.git</developerConnection>
+		<url>https://github.com/magick93/sculptor-cartridge-camelrs.git</url>
+		<connection>https://github.com/magick93/sculptor-cartridge-camelrs.git</connection>
+		<developerConnection>https://github.com/magick93/sculptor-cartridge-camelrs.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
-		<url>https://github.com/magick93/sculptor-cartridge-apachedeltaspike.git</url>
+		<url>https://github.com/magick93/sculptor-cartridge-camelrs.git</url>
 		<system>GitHub Issues</system>
 	</issueManagement>
 
@@ -93,19 +93,6 @@
 	</build>
 
 	<dependencies>
-		<dependency>
-		    <groupId>org.apache.deltaspike.modules</groupId>
-		    <artifactId>deltaspike-data-module-api</artifactId>
-		    <version>${deltaspike.version}</version>
-		    <scope>compile</scope>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.apache.deltaspike.modules</groupId>
-		    <artifactId>deltaspike-data-module-impl</artifactId>
-		    <version>${deltaspike.version}</version>
-		    <scope>runtime</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.sculptorgenerator</groupId>
 			<artifactId>sculptor-generator-library</artifactId>
