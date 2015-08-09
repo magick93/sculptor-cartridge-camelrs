@@ -36,14 +36,16 @@ class ResourceTmplExtension extends ResourceTmpl {
 	}
 	
 
-	
+	//TODO - add JEE dependencies to pom
+	//TODO - add Camel dependencies to pom
+	//TODO - correct class/file name
 	def String writeCamelRestDsl(Resource it) {
-		
+		it.module.name
 		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "RouteBuilder")), OutputSlot::TO_GEN_SRC,
 			'''
 		«javaHeader»
 		package «restPackage»;
-		import javax.inject.Inject;
+		import javax.inject.Inject; 
 		import org.apache.camel.CamelContext;
 		import org.apache.camel.Produce;
 		import org.apache.camel.builder.RouteBuilder;
@@ -53,7 +55,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		/// Sculptor code formatter imports ///
 
 		
-		public class «IF gapClass»abstract «ENDIF» «name»RouteBuilder«IF gapClass»Base«ENDIF» «it.extendsLitteral» extends RouteBuilder{
+		public class «IF gapClass»abstract «ENDIF» «name»«IF gapClass»Base«ENDIF» «it.extendsLitteral» extends RouteBuilder{
 			
 			@Inject
 		    @ContextName("rest-camel-context")
@@ -63,7 +65,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 			
 			@Override
 			public void configure() throws Exception {
-				rest("/customer")
+				rest("/«it.module.name»")
 				 «operations.filter(op |  !op.implementedInGapClass).map[rsMethodType(it)].join»«operations.filter(op |  !op.implementedInGapClass).map[rsMethodTypeLast].last»
 				
 			}
@@ -77,11 +79,14 @@ class ResourceTmplExtension extends ResourceTmpl {
 	}
 	
 	def String rsMethodType(ResourceOperation it) {
+		//TODO: causes a NPE
 		'''
 		
 		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
 		  .produces(«jaxrsMediaTypes»)
-		  .to("direct:«it.delegate.delegate.name»")'''
+		  .to("direct:«it.name»")
+		  
+		  '''
 	}
 	def String rsMethodTypeLast(ResourceOperation it) {
 		''';
@@ -94,10 +99,10 @@ class ResourceTmplExtension extends ResourceTmpl {
 		«FOR delegateService : it.getDelegateServices()»
 			@Inject «getServiceapiPackage(delegateService)».«delegateService.name.toFirstUpper» «delegateService.name.toFirstLower()»;
 
-«««			protected «getServiceapiPackage(delegateService)».«delegateService.name
-«««				» get«delegateService.name»() {
-«««				return «delegateService.name.toFirstLower()»;
-«««			}
+			protected «getServiceapiPackage(delegateService)».«delegateService.name
+				» get«delegateService.name»() {
+				return «delegateService.name.toFirstLower()»;
+			}
 		«ENDFOR»
 		'''
 	}
