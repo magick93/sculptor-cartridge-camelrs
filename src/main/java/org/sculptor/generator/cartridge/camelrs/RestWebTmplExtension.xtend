@@ -7,13 +7,13 @@ import org.sculptor.generator.template.rest.RestWebTmpl
 import org.sculptor.generator.util.OutputSlot
 import sculptormetamodel.Application
 import sculptormetamodel.Resource
-import org.sculptor.generator.ext.Properties
+import org.sculptor.generator.util.HelperBase
 
 @ChainOverride
 class RestWebTmplExtension extends RestWebTmpl {
 	
 	@Inject extension Helper helper
-	@Inject extension Properties properties
+	@Inject extension HelperBase helperBase
 	
 	override restWeb(Application it) {
 		writeRestApplicationfile
@@ -22,10 +22,9 @@ class RestWebTmplExtension extends RestWebTmpl {
 
 	
 	def String writeRestApplicationfile(Application it) {
-		
-		fileOutput(javaFileName(basePackage+ ".RestApplication" ), OutputSlot::TO_GEN_SRC,
+		fileOutput(javaFileName(restPackage +  ".RestApplication" ), OutputSlot::TO_GEN_SRC,
 			'''
-		«javaHeader»
+		«restPackage»
 		package «basePackage»;
 		import javax.ws.rs.ApplicationPath;
 		import javax.ws.rs.core.Application;
@@ -54,6 +53,10 @@ class RestWebTmplExtension extends RestWebTmpl {
 			'''
 			classes.add(«name»Impl.class);
 			'''
+	}
+	
+	def restPackage(Application it) {
+		module.restPackage;
 	}
 	
 
