@@ -9,6 +9,7 @@ import sculptormetamodel.Application
 import sculptormetamodel.Resource
 import org.sculptor.generator.ext.Properties
 import org.sculptor.generator.util.HelperBase
+import org.sculptor.generator.util.PropertiesBase
 
 @ChainOverride
 class RestWebTmplExtension extends RestWebTmpl {
@@ -16,6 +17,8 @@ class RestWebTmplExtension extends RestWebTmpl {
 	@Inject extension Helper helper
 	@Inject extension HelperBase helperBase
 	@Inject extension Properties properties
+	
+	@Inject PropertiesBase propBase
 	
 	override restWeb(Application it) {
 		writeRestApplicationfile
@@ -58,7 +61,7 @@ class RestWebTmplExtension extends RestWebTmpl {
 	}
 	
 	def restPackage(Application it) {
-		module.restPackage;
+		concatPackage(basePackage, propBase.restPackage)
 	}
 	
 
