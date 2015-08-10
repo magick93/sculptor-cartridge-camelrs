@@ -23,11 +23,10 @@ class RestWebTmplExtension extends RestWebTmpl {
 	
 	def String writeRestApplicationfile(Application it) {
 		
-		//TODO - fix hardcoding of package
-		fileOutput(javaFileName(basePackage+ ".trade.rest.RestApplication" ), OutputSlot::TO_GEN_SRC,
+		fileOutput(javaFileName(basePackage+ ".RestApplication" ), OutputSlot::TO_GEN_SRC,
 			'''
 		«javaHeader»
-		package «basePackage».trade.rest;
+		package «basePackage»;
 		import javax.ws.rs.ApplicationPath;
 		import javax.ws.rs.core.Application;
 		import java.util.HashSet;
