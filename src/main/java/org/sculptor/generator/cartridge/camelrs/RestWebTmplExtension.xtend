@@ -3,13 +3,13 @@ package org.sculptor.generator.cartridge.camelrs
 import javax.inject.Inject
 import org.sculptor.generator.chain.ChainOverride
 import org.sculptor.generator.ext.Helper
+import org.sculptor.generator.ext.Properties
 import org.sculptor.generator.template.rest.RestWebTmpl
+import org.sculptor.generator.util.HelperBase
 import org.sculptor.generator.util.OutputSlot
+import org.sculptor.generator.util.PropertiesBase
 import sculptormetamodel.Application
 import sculptormetamodel.Resource
-import org.sculptor.generator.ext.Properties
-import org.sculptor.generator.util.HelperBase
-import org.sculptor.generator.util.PropertiesBase
 
 @ChainOverride
 class RestWebTmplExtension extends RestWebTmpl {

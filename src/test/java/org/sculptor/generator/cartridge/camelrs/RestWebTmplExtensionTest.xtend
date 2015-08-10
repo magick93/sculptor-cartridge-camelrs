@@ -6,6 +6,10 @@ import org.sculptor.generator.test.GeneratorTestBase
 
 import static extension org.sculptor.generator.test.GeneratorTestExtensions.*
 
+
+/**
+ * Tests that verify that JAX-RS Application are correctly generated
+ */
 class RestWebTmplExtensionTest extends GeneratorTestBase {
 	
 	private static val APPLICATION_EXTENSION = "camelrs-application"
