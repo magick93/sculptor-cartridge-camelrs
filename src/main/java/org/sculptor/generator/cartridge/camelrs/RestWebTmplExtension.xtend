@@ -7,6 +7,7 @@ import org.sculptor.generator.template.rest.RestWebTmpl
 import org.sculptor.generator.util.OutputSlot
 import sculptormetamodel.Application
 import sculptormetamodel.Resource
+import org.sculptor.generator.ext.Properties
 import org.sculptor.generator.util.HelperBase
 
 @ChainOverride
@@ -14,6 +15,7 @@ class RestWebTmplExtension extends RestWebTmpl {
 	
 	@Inject extension Helper helper
 	@Inject extension HelperBase helperBase
+	@Inject extension Properties properties
 	
 	override restWeb(Application it) {
 		writeRestApplicationfile
@@ -22,10 +24,10 @@ class RestWebTmplExtension extends RestWebTmpl {
 
 	
 	def String writeRestApplicationfile(Application it) {
-		fileOutput(javaFileName(restPackage +  ".RestApplication" ), OutputSlot::TO_GEN_SRC,
+		fileOutput(javaFileName(restPackage + ".RestApplication" ), OutputSlot::TO_GEN_SRC,
 			'''
-		«restPackage»
-		package «basePackage»;
+		«javaHeader»
+		package «restPackage»;
 		import javax.ws.rs.ApplicationPath;
 		import javax.ws.rs.core.Application;
 		import java.util.HashSet;
