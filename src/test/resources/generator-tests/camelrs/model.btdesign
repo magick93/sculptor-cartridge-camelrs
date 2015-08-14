@@ -126,6 +126,13 @@ Application Library {
 		ValueObject Comment {
 			String text
 		}
+		
+		Resource LibraryResource {
+			show => LibraryService.findLibraryByName;
+			String createForm;
+			create => LibraryService.saveLibrary;
+			showAll => LibraryService.findMediaByCharacter;
+		}
 
 	}
 

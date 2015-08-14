@@ -1,27 +1,27 @@
 package org.sculptor.generator.cartridge.camelrs
 
-import org.sculptor.generator.template.rest.ResourceTmpl
-import org.sculptor.generator.chain.ChainOverride
-import sculptormetamodel.Resource
+import com.google.common.collect.Iterables
 import javax.inject.Inject
-import org.sculptor.generator.util.HelperBase
+import org.sculptor.generator.chain.ChainOverride
 import org.sculptor.generator.ext.Helper
 import org.sculptor.generator.ext.Properties
-import sculptormetamodel.ResourceOperation
-import org.sculptor.generator.util.OutputSlot
-import sculptormetamodel.Parameter
-import sculptormetamodel.HttpMethod
 import org.sculptor.generator.template.common.ExceptionTmpl
+import org.sculptor.generator.template.rest.ResourceTmpl
+import org.sculptor.generator.util.HelperBase
+import org.sculptor.generator.util.OutputSlot
+import sculptormetamodel.HttpMethod
 import sculptormetamodel.NamedElement
-import com.google.common.collect.Iterables
+import sculptormetamodel.Parameter
+import sculptormetamodel.Resource
+import sculptormetamodel.ResourceOperation
 
 @ChainOverride
 class ResourceTmplExtension extends ResourceTmpl {
 
 	@Inject private var ExceptionTmpl exceptionTmpl
 
-	@Inject extension HelperBase helperBase
 	@Inject extension Helper helper
+	@Inject extension HelperBase helperBase
 	@Inject extension Properties properties
 
 	@Inject extension JAXRSHelper jaxrsHelper

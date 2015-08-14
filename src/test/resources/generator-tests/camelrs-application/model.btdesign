@@ -1,0 +1,10 @@
+Application Test {
+	basePackage=test
+
+	Module test {
+
+		Resource TestResource {
+			String hello(String msg, ModelMap modelMap) return="test";
+		}
+	}
+}
