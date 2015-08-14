@@ -17,6 +17,7 @@ class RestWebTmplExtension extends RestWebTmpl {
 	@Inject extension Helper helper
 	@Inject extension HelperBase helperBase
 	@Inject extension Properties properties
+	Application app
 	
 	@Inject PropertiesBase propBase
 	
@@ -27,6 +28,7 @@ class RestWebTmplExtension extends RestWebTmpl {
 
 	
 	def String writeRestApplicationfile(Application it) {
+		app=it
 		fileOutput(javaFileName(restPackage + ".RestApplication" ), OutputSlot::TO_GEN_SRC,
 			'''
 		«javaHeader»
@@ -35,6 +37,7 @@ class RestWebTmplExtension extends RestWebTmpl {
 		import javax.ws.rs.core.Application;
 		import java.util.HashSet;
 		import java.util.Set;
+		«it.allResources.map[resourceImports].join»
 		
 		/// Sculptor code formatter imports ///
 
@@ -57,6 +60,12 @@ class RestWebTmplExtension extends RestWebTmpl {
 		def String  resourceBase(Resource it) {
 			'''
 			classes.add(«name»Impl.class);
+			'''
+	}
+	
+		def String  resourceImports(Resource it) {
+			'''
+			import «concatPackage(app.basePackage, propBase.restPackage)».«name»Impl;
 			'''
 	}
 	
