@@ -41,7 +41,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 	//TODO - correct class/file name
 	def String writeCamelRestDsl(Resource it) {
 		it.module.name
-		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Base" else "RouteBuilder")), OutputSlot::TO_GEN_SRC,
+		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Impl" else "RouteBuilder")), OutputSlot::TO_GEN_SRC,
 			'''
 		«javaHeader»
 		package «restPackage»;
@@ -55,7 +55,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		/// Sculptor code formatter imports ///
 
 		
-		public class «IF gapClass»abstract «ENDIF» «name»«IF gapClass»Base«ENDIF» «it.extendsLitteral» extends RouteBuilder{
+		public class «IF gapClass» «ENDIF» «name»«IF gapClass»Impl«ENDIF» «it.extendsLitteral» extends RouteBuilder{
 			
 			@Inject
 		    @ContextName("rest-camel-context")
