@@ -26,13 +26,30 @@ class ResourceTmplExtension extends ResourceTmpl {
 
 	@Inject extension JAXRSHelper jaxrsHelper
 	
-	
-
 	override String resourceBase(Resource it) {
-		
-		
 		writeCamelRestDsl
+	}
+	
+	override String resourceSubclass(Resource it) {
+		fileOutput(javaFileName(it.getRestPackage() + "." + name), OutputSlot::TO_SRC, '''
+		«javaHeader()»
+		package «it.getRestPackage()»;
 		
+		/// Sculptor code formatter imports ///
+		
+		/**
+		 * Implementation of «name».
+		 */
+		public class «name» extends «name»Impl {
+		
+			public «name»() {
+			}
+		
+			«it.operations.filter(op | op.isImplementedInGapClass()) .map[resourceMethod(it)].join()»
+		
+		}
+		'''
+		)
 	}
 	
 

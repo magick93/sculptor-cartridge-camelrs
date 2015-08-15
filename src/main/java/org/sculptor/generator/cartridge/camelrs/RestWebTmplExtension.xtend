@@ -57,22 +57,15 @@ class RestWebTmplExtension extends RestWebTmpl {
 		
 	}
 	
-		def String  resourceBase(Resource it) {
-			'''
-			classes.add(«name»Impl.class);
-			'''
-	}
-	
-		def String  resourceImports(Resource it) {
-			'''
-			import «concatPackage(app.basePackage, propBase.restPackage)».«name»Impl;
-			'''
-	}
+	def String  resourceBase(Resource it) '''
+		classes.add(«name»Impl.class);
+	'''
+
+	def String  resourceImports(Resource it) '''
+		import «restPackage».«name»Impl;
+	'''
 	
 	def restPackage(Application it) {
 		concatPackage(basePackage, propBase.restPackage)
 	}
-	
-
-	
 }
