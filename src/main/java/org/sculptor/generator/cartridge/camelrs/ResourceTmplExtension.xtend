@@ -50,7 +50,8 @@ class ResourceTmplExtension extends ResourceTmpl {
 		import org.apache.camel.Produce;
 		import org.apache.camel.builder.RouteBuilder;
 		import org.apache.camel.cdi.ContextName;
-		«imports(it)»
+		«imports»
+		«jaxrsMediaImports»
 		
 		/// Sculptor code formatter imports ///
 
@@ -66,7 +67,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 			@Override
 			public void configure() throws Exception {
 				rest("/«it.module.name»")
-				 «operations.filter(op |  !op.implementedInGapClass).map[rsMethodType(it)].join»«operations.filter(op |  !op.implementedInGapClass).map[rsMethodTypeLast].last»
+				 «operations.filter(op |  !op.implementedInGapClass).map[rsMethodType].join»«operations.filter(op |  !op.implementedInGapClass).map[rsMethodTypeLast].last»
 				
 			}
 
@@ -83,7 +84,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		'''
 		
 		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
-		  .produces(«jaxrsMediaTypes»)
+		  .produces(«jaxrsMediaTypes(it.resource)»)
 		  .to("direct:«it.name»")
 		  
 		  '''
@@ -129,12 +130,22 @@ class ResourceTmplExtension extends ResourceTmpl {
 		'''
 	}
 
-	def String jaxrsMediaTypes() {
+	def String jaxrsMediaTypes(Resource it) {
 		val types = mediaTypeProviders?.map["javax.ws.rs.core.MediaType." + it].join(", ")
 		'''
 			«IF types != null && !types.empty»
 				@javax.ws.rs.Produces({«types»})
 				@javax.ws.rs.Consumes({«types»})
+			«ENDIF»
+		'''
+	}
+	
+	def String jaxrsMediaImports(Resource it) {
+		val types = mediaTypeProviders?.map["javax.ws.rs.core.MediaType." + it].join(", ")
+		'''
+			«IF mediaTypeProviders != null && !mediaTypeProviders.empty»
+				import javax.ws.rs.Produces.«types»;
+				import javax.ws.rs.Consumes.«types»;
 			«ENDIF»
 		'''
 	}
