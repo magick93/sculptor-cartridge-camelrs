@@ -29,7 +29,7 @@ class ServiceTestTmplExtension extends ServiceTestTmpl {
 		/**
 		 * CDI based transactional test with DbUnit support.
 		 */
-		public class «name»Test extends «databaseJpaTestCaseClass()» implements «name»TestBase {
+		public class «name»Test implements «name»TestBase {
 	
 			«serviceJUnitDependencyInjection(it)»
 	
