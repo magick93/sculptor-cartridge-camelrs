@@ -2,11 +2,11 @@ package org.sculptor.generator.cartridge.camelrs
 
 import sculptormetamodel.ResourceOperation
 import javax.inject.Inject
-import org.sculptor.generator.ext.Helper
 import sculptormetamodel.ServiceOperation
 import org.sculptor.generator.util.HelperBase
 import com.google.common.collect.ImmutableList
 import org.sculptor.generator.ext.Properties
+import org.sculptor.generator.ext.Helper
 
 class JAXRSHelper {
 

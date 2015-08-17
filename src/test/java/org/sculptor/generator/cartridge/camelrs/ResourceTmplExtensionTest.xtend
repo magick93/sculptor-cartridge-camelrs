@@ -19,7 +19,7 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 
 	@BeforeClass
 	def static void setup() {
-		println(runGenerator(TEST_NAME))
+		runGenerator(TEST_NAME)
 	}
 
 	@Test
@@ -29,19 +29,19 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 		assertContains(code, "PlanetResourceImpl extends RouteBuilder {")
 		assertContains(code, "rest(\"/planet\")");
 		assertContains(code, "get(\"/{id}\")");
-		assertContains(code, "produces()");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
 		assertContains(code, "to(\"direct:show\")");
 		assertContains(code, "get(\"/form\")");
-		assertContains(code, "produces()");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
 		assertContains(code, "to(\"direct:createForm\")");
 		assertContains(code, "post(\"/\")");
-		assertContains(code, "produces()");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
 		assertContains(code, "to(\"direct:create\")");
 		assertContains(code, "delete(\"/{id}\")");
-		assertContains(code, "produces()");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
 		assertContains(code, "to(\"direct:delete\")");
 		assertContains(code, "get(\"/\")");
-		assertContains(code, "produces()");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
 		assertContains(code, "to(\"direct:showAll\")");
 	}
 

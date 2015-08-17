@@ -33,6 +33,7 @@ class ServiceTmplExtension extends ServiceTmpl {
 		 * Implementation of «name».
 		 */
 		@javax.inject.Named("«name.toFirstLower()»")
+		@javax.transaction.Transactional
 		«IF webService»
 			«serviceEjbTmpl.webServiceAnnotations(it)»
 		«ENDIF»
@@ -96,7 +97,10 @@ class ServiceTmplExtension extends ServiceTmpl {
 	}
 	
 	override springServiceAnnotation(Service it) {
-		'''@javax.inject.Named("«name.toFirstLower()»")'''
+		'''
+		@javax.inject.Named("«name.toFirstLower()»")
+		@javax.transaction.Transactional
+		'''
 	}
 	
 	override String delegateRepositories(Service it) '''
