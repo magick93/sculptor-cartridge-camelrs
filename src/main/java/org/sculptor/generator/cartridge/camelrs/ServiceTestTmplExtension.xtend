@@ -16,6 +16,11 @@ class ServiceTestTmplExtension extends ServiceTestTmpl {
 	@Inject extension Helper helper
 	@Inject extension Properties properties
 	
+	//FIXME: Remove hardcde
+	val SCULPTOR_LIBRARIES = #[
+		"org.sculptorgenerator:sculptor-framework-main:3.1.0",
+		"commons-lang:commons-lang:2.6"
+	];
 	
 	override String serviceJUnitSubclassWithAnnotations(Service it) {
 		fileOutput(javaFileName(it.getServiceapiPackage() + "." + name + "Test"), OutputSlot::TO_SRC_TEST, '''
@@ -27,10 +32,11 @@ class ServiceTestTmplExtension extends ServiceTestTmpl {
 		import static org.junit.Assert.*;
 	
 		/**
-		 * CDI based transactional test with DbUnit support.
+		 * CDI based arquillian test with DbUnit support.
 		 */
+		@org.junit.runner.RunWith(org.jboss.arquillian.junit.Arquillian.class)
 		public class «name»Test implements «name»TestBase {
-	
+			«arquillianDeployment(it)»
 			«serviceJUnitDependencyInjection(it)»
 	
 			«serviceJUnitGetDataSetFile(it)»
@@ -40,6 +46,25 @@ class ServiceTestTmplExtension extends ServiceTestTmpl {
 		'''
 		)
 	}
+	
+	def arquillianDeployment(Service it) '''
+		@org.jboss.arquillian.container.test.api.Deployment
+		public static WebArchive deploy() {
+			return org.jboss.shrinkwrap.api.ShrinkWrap.create(org.jboss.shrinkwrap.api.spec.WebArchive.class, "«name»Test.war")
+				.addPackages(true, "«getBasePackage(it.module)»")
+				«importDeploymentLibraries»
+				.addAsResource("persistence-test.xml", "META-INF/persistence.xml")
+				.addAsWebInfResource(org.jboss.shrinkwrap.api.asset.EmptyAsset.INSTANCE, "beans.xml");
+		}
+	'''
+	
+	def importDeploymentLibraries() {
+		SCULPTOR_LIBRARIES.map[importMavenLibrary].join
+	}
+	
+	def importMavenLibrary(String mavenPath) '''
+		.addAsLibraries(org.jboss.shrinkwrap.resolver.api.maven.Maven.resolver().resolve("«mavenPath»").withTransitivity().asFile())
+	'''
 	
 	override String serviceJUnitDependencyInjection(Service it) {
 	'''
