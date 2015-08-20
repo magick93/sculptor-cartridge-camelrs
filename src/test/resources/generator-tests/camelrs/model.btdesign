@@ -1,142 +1,37 @@
+Application Universe {
+    basePackage=org.helloworld
 
-import "classpath:/generator-tests/camelrs/model-person.btdesign"
+    Module planet {
 
-Application Library {
-	basePackage=org.sculptor.example.library
+        Resource PlanetResource {
+            show => PlanetService.findById;
+            String createForm;
+            create => PlanetService.save;
+            delete => PlanetService.delete;
+            showAll => PlanetService.findAll;
+        }
 
-	Module media {
+        Service PlanetService {
+            findById => PlanetRepository.findById;
+            findAll => PlanetRepository.findAll;
+            save => PlanetRepository.save;
+            delete => PlanetRepository.delete;
+        }
 
-		Service LibraryService {
-			hint="serviceHint"
-			findLibraryByName hint="serviceMethodHint" => LibraryRepository.findLibraryByName;
-			findMediaByName => MediaRepository.findMediaByName;
-			findMediaByCharacter => MediaRepository.findMediaByCharacter;
-			findPersonByName => PersonService.findPersonByName;
-			saveLibrary;
-			populate(AssociationSpecification spec);
-			someOtherMethod(String foo);
-		}
+        Entity Planet {
+            String name
+            int diameter
 
-		Entity Library {
-			scaffold
-			hint="entityHint"
+            Repository PlanetRepository {
+                findById;
+                save;
+                delete;
+                findAll;
+            }
 
-			"Name of library"
-			String name key hint="attrHint"
-			- Set<@PhysicalMedia> media hint="referenceHint" <-> library
+        }
 
-			Repository LibraryRepository {
-				hint="repositoryHint"
-				findByQuery hint="repoMethodHint";
-				@Library findLibraryByName(String name) throws LibraryNotFoundException;
-			}
 
-		}
-
-		Entity PhysicalMedia {
-			scaffold
-			String status length="3"
-			String location
-			- @Library library nullable databaseColumn="LIB_REF" <-> media
-			- Set<@Media> media hint="joinTableName=PHMED_MED" databaseColumn="MEDIA_REF" <-> physicalMedia
-		}
-
-		Service MediaService {
-			findAll => MediaRepository.findAll;
-		}
-
-		abstract Entity Media {
-			gap
-			String title ! changeable
-			- Set<@PhysicalMedia> physicalMedia inverse <-> media
-			- Set<@Engagement> engagements <-> media
-			- Set<@MediaCharacter> mediaCharacters <-> existsInMedia
-
-			Repository MediaRepository {
-				int getNumberOfMovies(Long libraryId);
-				List<@Media> findMediaByCharacter(Long libraryId, String characterName)	gap;
-
-				findByTitle(String title);
-
-				findById;
-				save;
-				findAll;
-				findByQuery;
-				findByKeys(Set<String> keys, String keyPropertyName, Class<@Media> persistentClass);
-				List<@Media> findMediaByName(Long libraryId, String name) gap;
-				Map<String, @Movie> findMovieByUrlIMDB(Set<String> keys) gap;
-			}
-
-		}
-
-		Entity Book extends @Media {
-			! auditable
-			String isbn key length="20"
-		}
-
-		Entity Movie extends @Media {
-			! auditable
-			String urlIMDB key
-			Integer playLength
-			- @Genre category nullable
-		}
-
-		enum Genre {
-			ACTION, COMEDY, DRAMA, SCI_FI
-		}
-
-		ValueObject Engagement {
-			not aggregateRoot
-
-			String role
-			- @Person person
-			- @Media media <-> engagements
-		}
-
-		Service MediaCharacterService {
-			gap
-			> @LibraryService
-			> @LibraryRepository
-			findAll => MediaCharacterRepository.findAll;
-		}
-
-		ValueObject MediaCharacter {
-			databaseTable="MEDIA_CHR"
-
-			hint="valueObjectHint"
-			String name hint="valueObjectAttrHint"
-			! changeable
-			- Set<@Person> playedBy
-			- Set<@Person> persons
-			- Set<@Media> existsInMedia hint="valueObjectRefHint" <-> mediaCharacters
-			- Set<@Review> reviews inverse
-			- List<@Comment> comments inverse databaseColumn="COMMENT_OF_CHARACTER"
-
-			Repository MediaCharacterRepository {
-				findByQuery;
-				findAll;
-			}
-
-		}
-
-		ValueObject Review {
-			String text
-		}
-
-		ValueObject Comment {
-			String text
-		}
-		
-		Resource LibraryResource {
-			show => LibraryService.findLibraryByName;
-			String createForm;
-			create => LibraryService.saveLibrary;
-			showAll => LibraryService.findMediaByCharacter;
-		}
-
-	}
+    }
 
 }
-
-
-

@@ -14,6 +14,9 @@ import sculptormetamodel.NamedElement
 import sculptormetamodel.Parameter
 import sculptormetamodel.Resource
 import sculptormetamodel.ResourceOperation
+import sculptormetamodel.ServiceOperation
+import com.google.common.primitives.Primitives
+import sculptormetamodel.DomainObject
 
 @ChainOverride
 class ResourceTmplExtension extends ResourceTmpl {
@@ -26,13 +29,33 @@ class ResourceTmplExtension extends ResourceTmpl {
 
 	@Inject extension JAXRSHelper jaxrsHelper
 	
-	
-
 	override String resourceBase(Resource it) {
-		
-		
 		writeCamelRestDsl
+	}
+	
+	override String resourceSubclass(Resource it) {
+		fileOutput(javaFileName(it.getRestPackage() + "." + name), OutputSlot::TO_SRC, '''
+		«javaHeader()»
+		package «it.getRestPackage()»;
 		
+		/// Sculptor code formatter imports ///
+		
+		/**
+		 * Implementation of «name».
+		 */
+		@javax.ejb.Startup
+		@javax.enterprise.context.ApplicationScoped
+		@org.apache.camel.cdi.ContextName("rest-camel-context")
+		public class «name» extends «name»Impl {
+		
+			public «name»() {
+			}
+		
+			«it.operations.filter(op | op.isImplementedInGapClass()) .map[resourceMethod(it)].join()»
+		
+		}
+		'''
+		)
 	}
 	
 
@@ -46,53 +69,90 @@ class ResourceTmplExtension extends ResourceTmpl {
 		«javaHeader»
 		package «restPackage»;
 		import javax.inject.Inject; 
-		import org.apache.camel.CamelContext;
-		import org.apache.camel.Produce;
 		import org.apache.camel.builder.RouteBuilder;
-		import org.apache.camel.cdi.ContextName;
-		«imports(it)»
+		«imports»
+		«jaxrsMediaImports»
 		
 		/// Sculptor code formatter imports ///
 
-		
-		public class «IF gapClass» «ENDIF» «name»«IF gapClass»Impl«ENDIF» «it.extendsLitteral» extends RouteBuilder{
+		public class«IF gapClass»«ENDIF» «name»«IF gapClass»Impl«ENDIF»«it.extendsLitteral» extends RouteBuilder {
 			
-			@Inject
-		    @ContextName("rest-camel-context")
-		    private CamelContext context;
-		    
 			«injectDelegateServices»
 			
 			@Override
 			public void configure() throws Exception {
-				rest("/«it.module.name»")
-				 «operations.filter(op |  !op.implementedInGapClass).map[rsMethodType(it)].join»«operations.filter(op |  !op.implementedInGapClass).map[rsMethodTypeLast].last»
+				restConfiguration()
+					.contextPath("/«contextPath»")
+					.port(8080)
+					.component("servlet")
+					.bindingMode(org.apache.camel.model.rest.RestBindingMode.json);
 				
+				rest("/«it.module.name»")
+					«operations.filter[!implementedInGapClass].map[rsMethodType].join»«operations.filter[!implementedInGapClass].map[rsMethodTypeLast].last»
+				
+				«operations.filter[!implementedInGapClass].filter[delegate != null].map[camelBeanDelegation].join»
 			}
-
-			
 		}
 		'''
-		
 		)
-		
+	}
+	
+	def camelBeanDelegation(ResourceOperation it) '''
+		from("«routeName»")
+			«IF routeName == "direct:delete"»
+			«resource.operations.findFirst[delegate.name == "findById"].beanDelegation»
+			«ENDIF»
+			«beanDelegation»;
+	'''
+	
+	def beanDelegation(ResourceOperation it) 
+		'''.bean(«delegate.service.name.toFirstLower», "«delegate.camelCall»")'''
+	
+	def camelCall(ServiceOperation it) 
+		'''«name»(«parameters.map[camelParameter].join(", ")»)'''
+	
+	/*
+	 * ServiceContext instances is set to null
+	 * Primitive types (and wrappers) are substituted with call to ${header.name}
+	 * Other parameter types are substituted with ${body}
+	 */
+	def camelParameter(Parameter it) {
+		if (type == "org.sculptor.framework.context.ServiceContext") "null"
+		else if (type.isPrimitive) '''${header.«name»}'''
+		else "${body}"
+	}
+	
+	def isPrimitive(String str) {
+		Primitives::allPrimitiveTypes.exists[name == str || simpleName == str]
+			|| Primitives::allWrapperTypes.exists[name == str || simpleName == str]
+	}
+	
+	def routeName(ResourceOperation it) {
+		"direct:" + name
 	}
 	
 	def String rsMethodType(ResourceOperation it) {
 		//TODO: causes a NPE
+		//TODO: fix hardcode
 		'''
-		
 		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
-		  .produces(«jaxrsMediaTypes»)
-		  .to("direct:«it.name»")
+		  .produces(javax.ws.rs.core.MediaType.APPLICATION_JSON)
+		  «IF parameters.exists[domainObjectType != null]»
+		  .type(«parameters.findFirst[domainObjectType != null].domainObjectType.domainObjectClass».class)
+		  «ENDIF»
+		  .to("«routeName»")
 		  
 		  '''
 	}
+	
+	def domainObjectClass(DomainObject it) {
+		domainPackage + "." + name
+	}
+	
 	def String rsMethodTypeLast(ResourceOperation it) {
 		''';
 		'''
 	}
-
 
 	def String injectDelegateServices(Resource it) {
 		'''
@@ -129,12 +189,22 @@ class ResourceTmplExtension extends ResourceTmpl {
 		'''
 	}
 
-	def String jaxrsMediaTypes() {
+	def String jaxrsMediaTypes(Resource it) {
 		val types = mediaTypeProviders?.map["javax.ws.rs.core.MediaType." + it].join(", ")
 		'''
 			«IF types != null && !types.empty»
 				@javax.ws.rs.Produces({«types»})
 				@javax.ws.rs.Consumes({«types»})
+			«ENDIF»
+		'''
+	}
+	
+	def String jaxrsMediaImports(Resource it) {
+		val types = mediaTypeProviders?.map["javax.ws.rs.core.MediaType." + it].join(", ")
+		'''
+			«IF mediaTypeProviders != null && !mediaTypeProviders.empty»
+				import javax.ws.rs.Produces.«types»;
+				import javax.ws.rs.Consumes.«types»;
 			«ENDIF»
 		'''
 	}
@@ -317,5 +387,9 @@ class ResourceTmplExtension extends ResourceTmpl {
 			.length + 1, type.length - 1)».class, responseContainer = "«collection
 				.substring(collection.lastIndexOf('.') + 1)»"«ELSE»response = «type
 					».class«ENDIF»'''
+	}
+	
+	def contextPath() {
+		getProperty("deployment.context-path", "contetPath")
 	}
 }

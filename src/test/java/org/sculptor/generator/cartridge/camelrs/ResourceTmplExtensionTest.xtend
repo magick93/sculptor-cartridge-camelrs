@@ -19,42 +19,42 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 
 	@BeforeClass
 	def static void setup() {
-		println(runGenerator(TEST_NAME))
+		runGenerator(TEST_NAME)
 	}
 
 	@Test
 	def void assertLibraryResourceRouteBuilder() {
-		val code = getFileText(TO_GEN_SRC + "/org/sculptor/example/library/media/rest/LibraryResourceBase.java");
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
 		println(code);
-		assertContains(code, "LibraryResourceBase  extends RouteBuilder{")
-		assertContainsConsecutiveFragments(code, #[
-			"public void configure() throws Exception {",
-			"rest(\"/media\")",
-			".get(\"/{name}\")",
-			".produces()",
-			".to(\"direct:show\")",
-			".get(\"/form\")",
-			".produces()",
-			".to(\"direct:createForm\")",
-			".post(\"/\")",
-			".produces()",
-			".to(\"direct:create\")",
-			".get(\"/\")",
-			".produces()",
-			".to(\"direct:showAll\")"
-		])
+		assertContains(code, "PlanetResourceImpl extends RouteBuilder {")
+		assertContains(code, "rest(\"/planet\")");
+		assertContains(code, "get(\"/{id}\")");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
+		assertContains(code, "to(\"direct:show\")");
+		assertContains(code, "get(\"/form\")");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
+		assertContains(code, "to(\"direct:createForm\")");
+		assertContains(code, "post(\"/\")");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
+		assertContains(code, "to(\"direct:create\")");
+		assertContains(code, "delete(\"/{id}\")");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
+		assertContains(code, "to(\"direct:delete\")");
+		assertContains(code, "get(\"/\")");
+		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
+		assertContains(code, "to(\"direct:showAll\")");
 	}
 
 
 	@Test
 	def void assertLibraryResourceImplementation() {
 		val code = getFileText(
-			TO_SRC + "/org/sculptor/example/library/media/rest/LibraryResource.java")
+			TO_SRC + "/org/helloworld/planet/rest/PlanetResource.java")
 		// FIXME: No spring @Controller should be present
 		//assertNotContains(code, "@Controller")
 		assertContainsConsecutiveFragments(code, #[
-			"public class LibraryResource extends LibraryResourceBase {",
-			"public LibraryResource() {",
+			"public class PlanetResource extends PlanetResourceImpl {",
+			"public PlanetResource() {",
 			"}"
 		])
 	}
