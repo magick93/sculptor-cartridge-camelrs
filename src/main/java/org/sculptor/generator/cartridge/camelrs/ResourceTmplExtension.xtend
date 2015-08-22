@@ -9,14 +9,13 @@ import org.sculptor.generator.template.common.ExceptionTmpl
 import org.sculptor.generator.template.rest.ResourceTmpl
 import org.sculptor.generator.util.HelperBase
 import org.sculptor.generator.util.OutputSlot
+import sculptormetamodel.DomainObject
 import sculptormetamodel.HttpMethod
 import sculptormetamodel.NamedElement
 import sculptormetamodel.Parameter
 import sculptormetamodel.Resource
 import sculptormetamodel.ResourceOperation
 import sculptormetamodel.ServiceOperation
-import com.google.common.primitives.Primitives
-import sculptormetamodel.DomainObject
 
 @ChainOverride
 class ResourceTmplExtension extends ResourceTmpl {
@@ -51,7 +50,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 			public «name»() {
 			}
 		
-			«it.operations.filter(op | op.isImplementedInGapClass()) .map[resourceMethod(it)].join()»
+			«operations.filter[isAbstractRoute].map[camelRouteImpl].join()»
 		
 		}
 		'''
@@ -75,7 +74,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		
 		/// Sculptor code formatter imports ///
 
-		public class«IF gapClass»«ENDIF» «name»«IF gapClass»Impl«ENDIF»«it.extendsLitteral» extends RouteBuilder {
+		public«IF gapClass» abstract«ENDIF» class «name»«IF gapClass»Impl«ENDIF»«it.extendsLitteral» extends RouteBuilder {
 			
 			«injectDelegateServices»
 			
@@ -88,22 +87,70 @@ class ResourceTmplExtension extends ResourceTmpl {
 					.bindingMode(org.apache.camel.model.rest.RestBindingMode.json);
 				
 				rest("/«it.module.name»")
-					«operations.filter[!implementedInGapClass].map[rsMethodType].join»«operations.filter[!implementedInGapClass].map[rsMethodTypeLast].last»
-				
-				«operations.filter[!implementedInGapClass].filter[delegate != null].map[camelBeanDelegation].join»
+					.produces(javax.ws.rs.core.MediaType.APPLICATION_JSON)
+					.consumes(javax.ws.rs.core.MediaType.APPLICATION_JSON)
+					
+					«operations.map[rsMethodType].join»;
+					«operations.sortBy[operationKey].map[camelRouteMethodInvocation].join»
 			}
+			
+			«operations.sortBy[operationKey].map[camelRoute].join»
 		}
 		'''
 		)
 	}
 	
+	def operationKey(ResourceOperation it) {
+		val start = if (abstractRoute) "a:" else "c:"
+		start + name
+	}
+		
+	
+	def camelrsIdMappingMethod() {
+		getProperty("camelrs.idToEntityMappingMethod", "findById")
+	}
+	
+	def camelRouteMethodInvocation(ResourceOperation it) '''
+		«createRouteMethodName»();
+	'''
+	
+	def camelRoute(ResourceOperation it) '''
+		protected«IF abstractRoute» abstract«ENDIF» void «createRouteMethodName»()«IF abstractRoute»;«ELSE» {
+			«camelBeanDelegation»
+		}
+		«ENDIF»
+	'''
+	
+	def camelRouteImpl(ResourceOperation it) '''
+		protected void «createRouteMethodName»() {
+			
+		}
+	'''
+	
+	def createRouteMethodName(ResourceOperation it)
+		'''createRoute«routeName.split(":").map[toFirstUpper].join»'''
+	
+	def isAbstractRoute(ResourceOperation it) {
+		implementedInGapClass 
+			|| delegate == null 
+			|| (delegate != null && parameters.size > 1) 
+			|| parameters.exists[domainObjectType != null && isDataTranferObject(domainObjectType)]
+	}
+	
 	def camelBeanDelegation(ResourceOperation it) '''
 		from("«routeName»")
-			«IF routeName == "direct:delete"»
-			«resource.operations.findFirst[delegate.name == "findById"].beanDelegation»
+			«IF isIdToEntityMapping»
+			«resource.operations.findFirst[delegate.name == camelrsIdMappingMethod].beanDelegation»
 			«ENDIF»
 			«beanDelegation»;
 	'''
+	
+	def isIdToEntityMapping(ResourceOperation op) {
+		op.parameters.size == 1 
+			&& op.delegate.parameters.size == 1 
+			&& op.parameters.exists[type == op.delegate.domainObject.idAttributeType]
+			&& op.delegate.parameters.exists[type == op.delegate.domainObject.domainObjectTypeName]
+	}
 	
 	def beanDelegation(ResourceOperation it) 
 		'''.bean(«delegate.service.name.toFirstLower», "«delegate.camelCall»")'''
@@ -118,13 +165,8 @@ class ResourceTmplExtension extends ResourceTmpl {
 	 */
 	def camelParameter(Parameter it) {
 		if (type == "org.sculptor.framework.context.ServiceContext") "null"
-		else if (type.isPrimitive) '''${header.«name»}'''
+		else if (type.isPrimitiveType) '''${header.«name»}'''
 		else "${body}"
-	}
-	
-	def isPrimitive(String str) {
-		Primitives::allPrimitiveTypes.exists[name == str || simpleName == str]
-			|| Primitives::allWrapperTypes.exists[name == str || simpleName == str]
 	}
 	
 	def routeName(ResourceOperation it) {
@@ -136,7 +178,6 @@ class ResourceTmplExtension extends ResourceTmpl {
 		//TODO: fix hardcode
 		'''
 		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
-		  .produces(javax.ws.rs.core.MediaType.APPLICATION_JSON)
 		  «IF parameters.exists[domainObjectType != null]»
 		  .type(«parameters.findFirst[domainObjectType != null].domainObjectType.domainObjectClass».class)
 		  «ENDIF»
@@ -149,11 +190,6 @@ class ResourceTmplExtension extends ResourceTmpl {
 		domainPackage + "." + name
 	}
 	
-	def String rsMethodTypeLast(ResourceOperation it) {
-		''';
-		'''
-	}
-
 	def String injectDelegateServices(Resource it) {
 		'''
 		«FOR delegateService : it.getDelegateServices()»

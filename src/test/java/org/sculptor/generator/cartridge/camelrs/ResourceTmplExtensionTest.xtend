@@ -44,6 +44,22 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
 		assertContains(code, "to(\"direct:showAll\")");
 	}
+	
+	@Test
+	def void assertRouteWithDTOIsAbstract() {
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
+		assertContains(code, "abstract class")
+		assertContains(code, "protected abstract void createRouteDirectUpdate();")	
+		assertContains(code, "put(\"/\").type(PlanetForm.class).to(\"direct:update\")")
+	}
+	
+	@Test
+	def void assertNonDelegatedRouteIsAbstract() {
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
+		assertContains(code, "abstract class")
+		assertContains(code, "protected abstract void createRouteDirectCreateForm();")	
+		assertContains(code, ".get(\"/form\").to(\"direct:createForm\")")
+	}
 
 
 	@Test
