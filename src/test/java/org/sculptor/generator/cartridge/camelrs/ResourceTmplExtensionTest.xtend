@@ -50,7 +50,8 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
 		assertContains(code, "abstract class")
 		assertContains(code, "protected abstract void createRouteDirectUpdate();")	
-		assertContains(code, "put(\"/\").type(PlanetForm.class).to(\"direct:update\")")
+		assertContains(code, "put(\"/\")")
+		assertContains(code, "type(PlanetForm.class).to(\"direct:update\")")
 	}
 	
 	@Test
@@ -58,7 +59,8 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
 		assertContains(code, "abstract class")
 		assertContains(code, "protected abstract void createRouteDirectCreateForm();")	
-		assertContains(code, ".get(\"/form\").to(\"direct:createForm\")")
+		assertContains(code, "get(\"/form\")")
+		assertContains(code, "to(\"direct:createForm\")")
 	}
 
 
@@ -66,8 +68,7 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 	def void assertLibraryResourceImplementation() {
 		val code = getFileText(
 			TO_SRC + "/org/helloworld/planet/rest/PlanetResource.java")
-		// FIXME: No spring @Controller should be present
-		//assertNotContains(code, "@Controller")
+		assertNotContains(code, "@Controller")
 		assertContainsConsecutiveFragments(code, #[
 			"public class PlanetResource extends PlanetResourceImpl {",
 			"public PlanetResource() {",
