@@ -23,8 +23,6 @@ class RestTransformationExtension extends RestTransformation {
 		if (httpMethod == HttpMethod::PUT && name == "update" &&
 				parameters.size == 1 && delegate?.name == "save" &&
 					path == defaultPath) {
-			addIdParameter
-			path = path + "/{id}"
 			addThrowsException
 		}
 		if ((throws == null || throws == "") && httpMethod == HttpMethod::DELETE)

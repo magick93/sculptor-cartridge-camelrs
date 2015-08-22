@@ -9,6 +9,14 @@ Application Universe {
             create => PlanetService.save;
             delete => PlanetService.delete;
             showAll => PlanetService.findAll;
+            update(@PlanetForm planetForm) => PlanetService.save;
+        }
+        
+        DataTransferObject PlanetForm {
+        	String name
+        	int diameter
+        	IDTYPE id
+        	Long version
         }
 
         Service PlanetService {
@@ -28,10 +36,6 @@ Application Universe {
                 delete;
                 findAll;
             }
-
         }
-
-
     }
-
 }
