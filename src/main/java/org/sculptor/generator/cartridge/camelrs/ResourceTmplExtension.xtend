@@ -426,6 +426,6 @@ class ResourceTmplExtension extends ResourceTmpl {
 	}
 	
 	def contextPath() {
-		getProperty("deployment.context-path", "contetPath")
+		getProperty("deployment.contextPath", "contetPath")
 	}
 }
