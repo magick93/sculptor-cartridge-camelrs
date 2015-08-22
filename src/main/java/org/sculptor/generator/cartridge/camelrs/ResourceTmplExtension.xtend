@@ -16,6 +16,7 @@ import sculptormetamodel.Parameter
 import sculptormetamodel.Resource
 import sculptormetamodel.ResourceOperation
 import sculptormetamodel.ServiceOperation
+import org.apache.commons.lang3.StringEscapeUtils;
 
 @ChainOverride
 class ResourceTmplExtension extends ResourceTmpl {
@@ -25,6 +26,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 	@Inject extension Helper helper
 	@Inject extension HelperBase helperBase
 	@Inject extension Properties properties
+	@Inject extension WebXmlHelper webXmlHelper
 
 	@Inject extension JAXRSHelper jaxrsHelper
 	
@@ -87,6 +89,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 					.bindingMode(org.apache.camel.model.rest.RestBindingMode.json);
 				
 				rest("/«it.module.name»")
+					.description("«StringEscapeUtils::escapeJava(documentationText)»")
 					.produces(javax.ws.rs.core.MediaType.APPLICATION_JSON)
 					.consumes(javax.ws.rs.core.MediaType.APPLICATION_JSON)
 					
@@ -178,6 +181,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 		//TODO: fix hardcode
 		'''
 		.«httpMethod.toString.toLowerCase»(«IF parentRelativePath != null»"«parentRelativePath»"«ENDIF»)
+		  .description("«StringEscapeUtils::escapeJava(documentationText)»")
 		  «IF parameters.exists[domainObjectType != null]»
 		  .type(«parameters.findFirst[domainObjectType != null].domainObjectType.domainObjectClass».class)
 		  «ENDIF»
@@ -186,6 +190,26 @@ class ResourceTmplExtension extends ResourceTmpl {
 		  '''
 	}
 	
+	def getDocumentationText(NamedElement it) {
+		if (doc.isNullOrEmpty) {
+			generatedDocumentation.toString.trim
+		} else {
+			doc
+		}
+	}
+	
+	def dispatch getGeneratedDocumentation(NamedElement it) {
+		name
+	}
+	
+	def dispatch getGeneratedDocumentation(ResourceOperation it) {
+		var doc = '''Operation: «name», camel route: «routeName»'''
+		if (delegate != null) {
+			doc += ''', delegates to «delegate.service.serviceapiPackage».«delegate.service.name»#«delegate.name»''' 
+		}
+		doc
+	}
+
 	def domainObjectClass(DomainObject it) {
 		domainPackage + "." + name
 	}
@@ -423,9 +447,5 @@ class ResourceTmplExtension extends ResourceTmpl {
 			.length + 1, type.length - 1)».class, responseContainer = "«collection
 				.substring(collection.lastIndexOf('.') + 1)»"«ELSE»response = «type
 					».class«ENDIF»'''
-	}
-	
-	def contextPath() {
-		getProperty("deployment.contextPath", "contetPath")
 	}
 }
