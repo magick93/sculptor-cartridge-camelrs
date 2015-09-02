@@ -173,7 +173,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 	}
 	
 	def routeName(ResourceOperation it) {
-		"direct:" + name
+		"direct:" + resource.domainResourceName.toFirstLower + name.toFirstUpper
 	}
 	
 	def String rsMethodType(ResourceOperation it) {

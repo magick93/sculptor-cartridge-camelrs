@@ -30,37 +30,37 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 		assertContains(code, "rest(\"/planet\")");
 		assertContains(code, "get(\"/{id}\")");
 		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
-		assertContains(code, "to(\"direct:show\")");
+		assertContains(code, "to(\"direct:planetShow\")");
 		assertContains(code, "get(\"/form\")");
 		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
-		assertContains(code, "to(\"direct:createForm\")");
+		assertContains(code, "to(\"direct:planetCreateForm\")");
 		assertContains(code, "post(\"/\")");
 		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
-		assertContains(code, "to(\"direct:create\")");
+		assertContains(code, "to(\"direct:planetCreate\")");
 		assertContains(code, "delete(\"/{id}\")");
 		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
-		assertContains(code, "to(\"direct:delete\")");
+		assertContains(code, "to(\"direct:planetDelete\")");
 		assertContains(code, "get(\"/\")");
 		assertContains(code, "produces(MediaType.APPLICATION_JSON)");
-		assertContains(code, "to(\"direct:showAll\")");
+		assertContains(code, "to(\"direct:planetShowAll\")");
 	}
 	
 	@Test
 	def void assertRouteWithDTOIsAbstract() {
 		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
 		assertContains(code, "abstract class")
-		assertContains(code, "protected abstract void createRouteDirectUpdate();")	
+		assertContains(code, "protected abstract void createRouteDirectPlanetUpdate();")	
 		assertContains(code, "put(\"/\")")
-		assertContains(code, "type(PlanetForm.class).to(\"direct:update\")")
+		assertContains(code, "type(PlanetForm.class).to(\"direct:planetUpdate\")")
 	}
 	
 	@Test
 	def void assertNonDelegatedRouteIsAbstract() {
 		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
 		assertContains(code, "abstract class")
-		assertContains(code, "protected abstract void createRouteDirectCreateForm();")	
+		assertContains(code, "protected abstract void createRouteDirectPlanetCreateForm();")	
 		assertContains(code, "get(\"/form\")")
-		assertContains(code, "to(\"direct:createForm\")")
+		assertContains(code, "to(\"direct:planetCreateForm\")")
 	}
 
 
