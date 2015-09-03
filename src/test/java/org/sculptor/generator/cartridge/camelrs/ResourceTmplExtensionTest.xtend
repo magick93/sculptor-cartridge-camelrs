@@ -62,6 +62,31 @@ class ResourceTmplExtensionTest extends GeneratorTestBase {
 		assertContains(code, "get(\"/form\")")
 		assertContains(code, "to(\"direct:planetCreateForm\")")
 	}
+	
+	@Test
+	def void assertBeanDelegationSave() {
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
+		assertContains(code, "from(\"direct:planetCreate\").bean(planetService, \"save(null, ${body})\");");
+	}
+	
+	@Test
+	def void assertBeanDelegationDelete() {
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
+		assertContains(code, "from(\"direct:planetDelete\").bean(planetService, \"findById(null, ${header.id})\")");
+		assertContains(code, ".bean(planetService, \"delete(null, ${body})\");");
+	}
+	
+	@Test
+	def void assertBeanDelegationShow() {
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
+		assertContains(code, "from(\"direct:planetShow\").bean(planetService, \"findById(null, ${header.id})\");");
+	}
+	
+	@Test
+	def void assertBeanDelegationShowAll() {
+		val code = getFileText(TO_GEN_SRC + "/org/helloworld/planet/rest/PlanetResourceImpl.java");
+		assertContains(code, "from(\"direct:planetShowAll\").bean(planetService, \"findAll(null)\");");
+	}
 
 
 	@Test
