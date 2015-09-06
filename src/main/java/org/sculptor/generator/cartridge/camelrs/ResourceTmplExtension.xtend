@@ -17,6 +17,7 @@ import sculptormetamodel.Resource
 import sculptormetamodel.ResourceOperation
 import sculptormetamodel.ServiceOperation
 import org.apache.commons.lang3.StringEscapeUtils;
+import com.google.common.primitives.Primitives
 
 @ChainOverride
 class ResourceTmplExtension extends ResourceTmpl {
@@ -143,16 +144,16 @@ class ResourceTmplExtension extends ResourceTmpl {
 	def camelBeanDelegation(ResourceOperation it) '''
 		from("«routeName»")
 			«IF isIdToEntityMapping»
-			«resource.operations.findFirst[delegate.name == camelrsIdMappingMethod].beanDelegation»
+			«resource.operations.findFirst[delegate != null && delegate.name == camelrsIdMappingMethod].beanDelegation»
 			«ENDIF»
 			«beanDelegation»;
 	'''
 	
 	def isIdToEntityMapping(ResourceOperation op) {
-		op.parameters.size == 1 
-			&& op.delegate.parameters.size == 1 
-			&& op.parameters.exists[type == op.delegate.domainObject.idAttributeType]
-			&& op.delegate.parameters.exists[type == op.delegate.domainObject.domainObjectTypeName]
+		op.parentRelativePath != null 
+			&& op.parentRelativePath.equals("/{id}")
+			&& op.delegate != null
+			&& op.delegate.parameters.exists[domainObjectType != null]
 	}
 	
 	def beanDelegation(ResourceOperation it) 
@@ -168,12 +169,17 @@ class ResourceTmplExtension extends ResourceTmpl {
 	 */
 	def camelParameter(Parameter it) {
 		if (type == "org.sculptor.framework.context.ServiceContext") "null"
-		else if (type.isPrimitiveType) '''${header.«name»}'''
+		else if (type != null && type.isPrimitiveTypeOrWrapper) '''${header.«name»}'''
 		else "${body}"
 	}
 	
+	def isPrimitiveTypeOrWrapper(String it) {
+		Primitives::allPrimitiveTypes.map[simpleName].toList.contains(it)
+			||	Primitives::allWrapperTypes.map[simpleName].toList.contains(it)
+	}
+	
 	def routeName(ResourceOperation it) {
-		"direct:" + name
+		"direct:" + resource.domainResourceName.toFirstLower + name.toFirstUpper
 	}
 	
 	def String rsMethodType(ResourceOperation it) {
