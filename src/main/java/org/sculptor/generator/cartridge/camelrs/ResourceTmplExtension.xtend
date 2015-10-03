@@ -61,9 +61,7 @@ class ResourceTmplExtension extends ResourceTmpl {
 	}
 	
 
-	//TODO - add JEE dependencies to pom
-	//TODO - add Camel dependencies to pom
-	//TODO - correct class/file name
+
 	def String writeCamelRestDsl(Resource it) {
 		it.module.name
 		fileOutput(javaFileName(restPackage + "." + name + (if (gapClass) "Impl" else "RouteBuilder")), OutputSlot::TO_GEN_SRC,
